@@ -8,7 +8,8 @@ namespace ServerApp.Models
 {
     public class Order
     {
-        public int OrderId { get; set; }
+        public string OrderId { get; set; }
+        public string IncomingOrderId { get; set; }
         public string Notes { get; set; }
         public List<OrderItem> OrderItems {get; set;}
         public Status Status { get; set; }

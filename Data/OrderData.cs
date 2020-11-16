@@ -10,37 +10,41 @@ namespace ServerApp.Data
 {
     public class OrderData : IOrderData
     {
-        private ConcurrentDictionary<long, Order> _processingOrders;
+        private ConcurrentDictionary<string, Order> _processingOrders;
         private ConcurrentQueue<Order> _orderQueue;
-        private ConcurrentQueue<Order> _orderItemQueue;
         private ConcurrentQueue<Order> _completedOrders;
-        private ConcurrentDictionary<long, Order> _readyOrders;
+        private ConcurrentDictionary<string, Order> _readyOrders;
 
         public OrderData()
         {
             _orderQueue = new ConcurrentQueue<Order>();
-            _orderItemQueue = new ConcurrentQueue<Order>();
             _completedOrders = new ConcurrentQueue<Order>();
-            _processingOrders = new ConcurrentDictionary<long, Order>();
-            _readyOrders = new ConcurrentDictionary<long, Order>();
+            _processingOrders = new ConcurrentDictionary<string, Order>();
+            _readyOrders = new ConcurrentDictionary<string, Order>();
         }
 
         public async void AddOrder(Order order)
         {
-            await new Task(() => _orderQueue.Enqueue(order));
+            await Task.Factory.StartNew(() => {
+                //Task.Delay(1000).Wait();
+                _orderQueue.Enqueue(order);
+                    
+                });
         }
 
-        public async Task<Order> DequeueOrder()
+        public void UpdateOrderStatusToProcessing(Order order)
         {
-            var task = Task<Order>.Factory.StartNew(() =>
-           {
-               if (_orderQueue.TryDequeue(out Order order))
-               {
-                   return order;
-               }
-               return null;
-           });
-            return await task;
+            order.Status = Status.InProgress;
+            _processingOrders.AddOrUpdate(order.OrderId, order, (key, oldValue) => order);
+        }
+
+        public Order DequeueOrder()
+        {
+            if (_orderQueue.TryDequeue(out Order order))
+            {
+                return order;
+            }
+            return null;
         }
     }
 }

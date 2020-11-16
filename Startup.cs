@@ -6,6 +6,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using ServerApp.BackgroudProcess;
+using ServerApp.Data;
+using ServerApp.Data.Interfaces;
+using ServerApp.Interfaces;
+using ServerApp.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +32,10 @@ namespace ServerApp
         {
             services.AddControllers();
             services.AddMvc().AddXmlDataContractSerializerFormatters();
+            
+            services.AddSingleton<IOrderData, OrderData>();
+            services.AddSingleton<IOrderService, OrderService>();
+            services.AddHostedService<OrderQueuingProcess>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

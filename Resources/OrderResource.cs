@@ -9,7 +9,7 @@ namespace ServerApp.Resources
     public class OrderResource
     {
         [Required]
-        public long OrderId { get; set; }
+        public string OrderId { get; set; }
         [Required]
         public string Name { get; set; }
         [Required]
