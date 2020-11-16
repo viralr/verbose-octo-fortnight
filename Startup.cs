@@ -32,8 +32,9 @@ namespace ServerApp
         {
             services.AddControllers();
             services.AddMvc().AddXmlDataContractSerializerFormatters();
-            
+            services.AddSingleton<IWorkerData, WorkerData>();
             services.AddSingleton<IOrderData, OrderData>();
+            
             services.AddSingleton<IOrderService, OrderService>();
             services.AddHostedService<OrderQueuingProcess>();
         }

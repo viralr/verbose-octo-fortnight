@@ -12,9 +12,11 @@ namespace ServerApp.Services
     public class OrderService : IOrderService
     {
         private IOrderData _data;
-        public OrderService(IOrderData orderData)
+        private IWorkerData workerData;
+        public OrderService(IOrderData orderData, IWorkerData worker)
         {
             _data = orderData;
+            workerData = worker;
         }
         public bool AddOrder(OrderResource order)
         {
@@ -31,6 +33,7 @@ namespace ServerApp.Services
         public void QueueOrderItemsForProcessing(Order order)
         {
             _data.UpdateOrderStatusToProcessing(order);
+            workerData.QueueOrderItems(order.OrderItems);
         }
 
         private Order ValidateOrderResourceAndAddToQueue(OrderResource order)
