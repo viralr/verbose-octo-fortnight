@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using ServerApp.Interfaces;
+using ServerApp.Models;
+using ServerApp.Resources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,81 +9,42 @@ using System.Threading.Tasks;
 
 namespace ServerApp.Controllers
 {
+    [ApiController]
+    [Route("/worker")]
     public class WorkerController : Controller
     {
-        // GET: WorkerController
-        public ActionResult Index()
+        private IOrderService _orderService;
+        public WorkerController(IOrderService orderService)
         {
-            return View();
+            _orderService = orderService;
         }
 
-        // GET: WorkerController/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        // GET: WorkerController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: WorkerController/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        [Route("/login")]
+        public void Login([FromBody] WorkerResource worker)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            _orderService.AddWorker(worker.Username, worker.Password);
         }
 
-        // GET: WorkerController/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        // POST: WorkerController/Edit/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        [Route("/logout")]
+        public void Logout(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            _orderService.RemoveWorker(id);
         }
 
-        // GET: WorkerController/Delete/5
-        public ActionResult Delete(int id)
+        [HttpGet]
+        [Route("/tasks")]
+        public List<OrderItem> GetTasks(int id)
         {
-            return View();
+            return _orderService.GetWorkerTasks(id);
         }
 
-        // POST: WorkerController/Delete/5
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        [Route("/tasks")]
+        public List<OrderItem> MarkOrderItemAsComplete(int workerId, string orderItemId)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return _orderService.GetWorkerTasks(workerId);
         }
     }
 }

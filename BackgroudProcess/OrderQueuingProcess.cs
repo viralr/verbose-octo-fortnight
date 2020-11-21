@@ -25,15 +25,25 @@ namespace ServerApp.BackgroudProcess
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            return Task.CompletedTask;
         }
 
         private void QueueOrder(object state)
         {
-            // check if any workers are free before dequeing
+            // check if any workers are available or free before dequeing
             Order order = _orderService.DequeueOrder();
             if(order != null)
             {
+                try
+                {
+                    _orderService.QueueOrderItemsForProcessing(order);
+                }
+                catch
+                {
+                    order.Status = Status.Open;
+                    // log message
+                    _orderService.EnqueueOrder(order);
+                }
                 
             }
         }

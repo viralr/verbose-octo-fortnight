@@ -11,5 +11,10 @@ namespace ServerApp.Interfaces
     {
         bool AddOrder(OrderResource order);
         Order DequeueOrder();
+        void QueueOrderItemsForProcessing(Order order);
+        bool EnqueueOrder(Order order);
+        bool AddWorker(string userName, string password);
+        bool RemoveWorker(int id);
+        List<OrderItem> GetWorkerTasks(int id);
     }
 }

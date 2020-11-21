@@ -11,6 +11,7 @@ namespace ServerApp.Services
 {
     public class OrderService : IOrderService
     {
+        static int workerId = 0;
         private IOrderData _data;
         private IWorkerData workerData;
         public OrderService(IOrderData orderData, IWorkerData worker)
@@ -23,6 +24,33 @@ namespace ServerApp.Services
             Order newOrder = ValidateOrderResourceAndAddToQueue(order);
             _data.AddOrder(newOrder);
             return true;
+        }
+
+        public bool EnqueueOrder(Order order)
+        {
+            _data.AddOrder(order);
+            return true;
+        }
+
+        public bool AddWorker(string userName, string password)
+        {
+            workerData.AddWorker(new Worker()
+            {
+                Id = workerId++,
+                TaskRate = 0
+            });
+            return true;
+        }
+
+        public bool RemoveWorker(int id)
+        {
+            workerData.RemoveWorker(id);
+            return true;
+        }
+
+        public List<OrderItem> GetWorkerTasks(int id)
+        {
+            return workerData.GetWorkerTasks(id);
         }
 
         public Order DequeueOrder()

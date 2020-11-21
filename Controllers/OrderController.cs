@@ -25,7 +25,6 @@ namespace ServerApp.Controllers
             return "InProgress";
         }
 
-        // POST: OrderController/Create
         [HttpPost]
         public bool AddOrder([FromBody] OrderResource order)
         {

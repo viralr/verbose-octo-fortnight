@@ -9,5 +9,8 @@ namespace ServerApp.Data.Interfaces
     public interface IWorkerData
     {
         void QueueOrderItems(List<OrderItem> items);
+        void AddWorker(Worker worker);
+        void RemoveWorker(int id);
+        List<OrderItem> GetWorkerTasks(int workerId);
     }
 }
