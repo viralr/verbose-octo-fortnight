@@ -12,5 +12,7 @@ namespace ServerApp.Data.Interfaces
         void AddWorker(Worker worker);
         void RemoveWorker(int id);
         List<OrderItem> GetWorkerTasks(int workerId);
+        bool AreWorkersAvailable();
+        OrderItem MarkOrderItemAsComplete(int workerId, string itemId);
     }
 }

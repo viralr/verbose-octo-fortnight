@@ -12,20 +12,20 @@ namespace ServerApp.Data
     public class WorkerData : IWorkerData
     {        
         private static object workerLock = new object();
-        private ConcurrentDictionary<int, ConcurrentQueue<OrderItem>> workerToTaskQueue = new ConcurrentDictionary<int, ConcurrentQueue<OrderItem>>();
-        private ConcurrentDictionary<int, ConcurrentBag<OrderItem>> workerToCurrentTask = new ConcurrentDictionary<int, ConcurrentBag<OrderItem>>();
-        private ConcurrentDictionary<int, Worker> workers = new ConcurrentDictionary<int, Worker>();
-        private ConcurrentBag<int> currentOrderItems = new ConcurrentBag<int>();
-        public WorkerData(IOrderService orderService)
+        private static ConcurrentDictionary<int, ConcurrentQueue<OrderItem>> workerToTaskQueue = new ConcurrentDictionary<int, ConcurrentQueue<OrderItem>>();
+        private static ConcurrentDictionary<int, ConcurrentDictionary<string, OrderItem>> workerToCurrentTask = 
+            new ConcurrentDictionary<int, ConcurrentDictionary<string, OrderItem>>();
+        private static ConcurrentDictionary<int, Worker> workers = new ConcurrentDictionary<int, Worker>();
+        public WorkerData()
         {
-
         }
 
         public void AddWorker(Worker worker)
         {
             workers.AddOrUpdate(worker.Id, worker, (key, oldValue) => worker);
             workerToTaskQueue.AddOrUpdate(worker.Id, new ConcurrentQueue<OrderItem>(), (key, oldValue) => new ConcurrentQueue<OrderItem>());
-            workerToCurrentTask.AddOrUpdate(worker.Id, new ConcurrentBag<OrderItem>(), (key, oldValue) => new ConcurrentBag<OrderItem>());
+            workerToCurrentTask.AddOrUpdate(worker.Id, new ConcurrentDictionary<string, OrderItem>(), 
+                (key, oldValue) => new ConcurrentDictionary<string, OrderItem>());
         }
 
         public OrderItem DequeueOrderItemForWorker(int workerId)
@@ -46,7 +46,7 @@ namespace ServerApp.Data
                 {
                     AddCurrentTasksToWorker(workerId);
                 }
-                return workerToCurrentTask[workerId].ToList();
+                return workerToCurrentTask[workerId].Values.ToList();
             }
             return null;
         }
@@ -60,18 +60,22 @@ namespace ServerApp.Data
                 if (orderItem == null)
                     break;
 
-                workerToCurrentTask[workerId].Add(orderItem);
+                workerToCurrentTask[workerId].AddOrUpdate(orderItem.OrderItemId, orderItem, (key, oldValue) => orderItem);
                 count++;
                 if (count == 3)
                     return;
             }
         }
 
-        public List<OrderItem> MarkOrderItemAsComplete(int workerId, string itemId)
+        public OrderItem MarkOrderItemAsComplete(int workerId, string itemId)
         {
             if (workers.ContainsKey(workerId))
             {
-                return workerToTaskQueue[workerId].ToList();
+                workerToCurrentTask[workerId].TryRemove(itemId, out OrderItem item);
+                if(item != null)
+                {
+                    return item;
+                }
             }
             return null;
         }
@@ -96,17 +100,22 @@ namespace ServerApp.Data
                         if (worker != null)
                         {
                             workerToTaskQueue.TryRemove(id, out ConcurrentQueue<OrderItem> queue);
-                            workerToCurrentTask.TryRemove(id, out ConcurrentBag<OrderItem> bag);
+                            workerToCurrentTask.TryRemove(id, out ConcurrentDictionary<string, OrderItem> bag);
                             // dequeue work to other workers
                             if (queue != null && queue.Count > 0 || (bag != null && bag.Count > 0))
                             {
                                 DistributeOrderItems(queue.ToList());
-                                DistributeOrderItems(bag.ToList());
+                                DistributeOrderItems(bag.Values.ToList());
                             }
                         }
                     }                    
                 }
             });
+        }
+
+        public bool AreWorkersAvailable()
+        {
+            return workers.Count > 0;
         }
 
         private void DistributeOrderItems(List<OrderItem> items)
@@ -115,19 +124,16 @@ namespace ServerApp.Data
             List<int> workerIds = workers.Keys.ToList();
             if (workerIds.Count == 0)
                 throw new Exception("No workers available");
-            int itemPerWorker = Math.Min(items.Count / workerIds.Count, 1);
-            int wIndex = 0, i = 0, count = 0;
+            int wIndex = new Random().Next(0, workerIds.Count), i = 0;
             while (i < items.Count)
-            {
-                if (count == itemPerWorker)
-                    wIndex++;
+            {                
                 if (wIndex == workerIds.Count)
                 {
                     wIndex = 0;
                 }
                 workerToTaskQueue[workerIds[wIndex]].Enqueue(items[i]);
 
-                count++;
+                wIndex++;
                 i++;
             }
         }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ServerApp.Interfaces;
+using ServerApp.Models;
 using ServerApp.Resources;
 using System;
 using System.Collections.Generic;
@@ -20,15 +21,17 @@ namespace ServerApp.Controllers
         }
 
         [HttpGet]
-        public string GetOrderStatus(int id)
+        [Route("all/{status}")]
+        public List<Order> GetCompletedOrders(Status status)
         {
-            return "InProgress";
+            return _orderService.GetOrders(status);
         }
 
         [HttpPost]
-        public bool AddOrder([FromBody] OrderResource order)
+        [Route("add")]
+        public bool AddOrder([FromBody] List<OrderResource> orders)
         {
-            return _orderService.AddOrder(order);
+            return _orderService.AddOrders(orders);
         }
     }
 }

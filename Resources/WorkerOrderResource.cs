@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ServerApp.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -6,14 +7,13 @@ using System.Threading.Tasks;
 
 namespace ServerApp.Resources
 {
-    public class OrderItemResource
+    public class WorkerOrderResource
     {
         [Required]
-        public string Name { get; set; }
+        public int WorkerId { get; set; }
         [Required]
-        public int Quanity { get; set; }
+        public string ItemId { get; set; }
         [Required]
-        public string ItemIdentity { get; set; }
-        public string Notes { get; set; }
+        public Status Status { get; set; }
     }
 }

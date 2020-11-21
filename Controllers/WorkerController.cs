@@ -20,31 +20,31 @@ namespace ServerApp.Controllers
         }
 
         [HttpPost]
-        [Route("/login")]
+        [Route("login")]
         public void Login([FromBody] WorkerResource worker)
         {
             _orderService.AddWorker(worker.Username, worker.Password);
         }
 
         [HttpPost]
-        [Route("/logout")]
+        [Route("logout/{id}")]
         public void Logout(int id)
         {
             _orderService.RemoveWorker(id);
         }
 
         [HttpGet]
-        [Route("/tasks")]
+        [Route("tasks/{id}")]
         public List<OrderItem> GetTasks(int id)
         {
             return _orderService.GetWorkerTasks(id);
         }
 
-        [HttpPost]
-        [Route("/tasks")]
-        public List<OrderItem> MarkOrderItemAsComplete(int workerId, string orderItemId)
+        [HttpPut]
+        [Route("tasks/update")]
+        public bool MarkOrderItemAsComplete([FromBody] WorkerOrderResource workerOrderResource)
         {
-            return _orderService.GetWorkerTasks(workerId);
+            return _orderService.MarkOrderItemAsComplete(workerOrderResource.WorkerId, workerOrderResource.ItemId);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using ServerApp.Data.Interfaces;
+﻿using Microsoft.Extensions.Logging;
+using ServerApp.Data.Interfaces;
 using ServerApp.Interfaces;
 using ServerApp.Models;
 using ServerApp.Resources;
@@ -13,16 +14,26 @@ namespace ServerApp.Services
     {
         static int workerId = 0;
         private IOrderData _data;
+        static int orderIdInt = 0;
+        static int orderItemIdInt = 0;
         private IWorkerData workerData;
-        public OrderService(IOrderData orderData, IWorkerData worker)
+        private ILogger<OrderService> _logger;
+        public OrderService(IOrderData orderData, IWorkerData worker, ILogger<OrderService> logger)
         {
             _data = orderData;
             workerData = worker;
+            _logger = logger;
         }
-        public bool AddOrder(OrderResource order)
+        public bool AddOrders(List<OrderResource> orders)
         {
-            Order newOrder = ValidateOrderResourceAndAddToQueue(order);
-            _data.AddOrder(newOrder);
+            _logger.LogError("Test Error");
+            _logger.LogWarning("Test Warning");
+            orders.AsParallel().ForAll((o) =>
+            {
+                Order newOrder = ValidateOrderResourceAndAddToQueue(o);
+                _data.AddOrder(newOrder);
+            });
+            
             return true;
         }
 
@@ -55,18 +66,32 @@ namespace ServerApp.Services
 
         public Order DequeueOrder()
         {
-            return _data.DequeueOrder();
+            if (workerData.AreWorkersAvailable())
+                return _data.DequeueOrder();
+            return null;
+        }
+
+        public List<Order> GetOrders(Status status)
+        {
+            return _data.GetOrders(status);
+        }
+
+        public bool MarkOrderItemAsComplete(int workerId, string itemId)
+        {
+            OrderItem orderItem = workerData.MarkOrderItemAsComplete(workerId, itemId);
+            _data.PostProcessOrderItemComplete(orderItem);
+            return true;
         }
 
         public void QueueOrderItemsForProcessing(Order order)
         {
             _data.UpdateOrderStatusToProcessing(order);
-            workerData.QueueOrderItems(order.OrderItems);
+            workerData.QueueOrderItems(order.OrderItems.Values.ToList());
         }
 
         private Order ValidateOrderResourceAndAddToQueue(OrderResource order)
         {
-            string orderId = Guid.NewGuid().ToString();
+            string orderId = orderIdInt++.ToString();
             Order newOrder = new Order()
             {
                 OrderId = orderId,
@@ -81,14 +106,15 @@ namespace ServerApp.Services
             return newOrder;
         }
 
-        private List<OrderItem> ValidateAndGetOrderItems(string orderId, List<OrderItemResource> items)
+        private Dictionary<string, OrderItem> ValidateAndGetOrderItems(string orderId, List<OrderItemResource> items)
         {
             return items.Select(p => new OrderItem()
             {
                 OrderId = orderId,
-                OrderItemId = Guid.NewGuid().ToString(),
+                OrderItemId = orderItemIdInt++.ToString(),
+                Quanity = p.Quanity,
                 Status = Status.Open
-            }).ToList();
+            }).ToDictionary(p => p.OrderItemId, p => p);
         }
     }
 }

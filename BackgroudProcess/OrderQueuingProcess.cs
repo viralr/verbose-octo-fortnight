@@ -2,6 +2,7 @@
 using ServerApp.Interfaces;
 using ServerApp.Models;
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +19,7 @@ namespace ServerApp.BackgroudProcess
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new Timer(QueueOrder, null, TimeSpan.Zero,
-                TimeSpan.FromMilliseconds(500));
+                TimeSpan.FromMilliseconds(2000));
 
             return Task.CompletedTask;
         }
@@ -36,6 +37,7 @@ namespace ServerApp.BackgroudProcess
             {
                 try
                 {
+                    Debug.WriteLine($"Queued Order: {order.IncomingOrderId}");
                     _orderService.QueueOrderItemsForProcessing(order);
                 }
                 catch

@@ -10,6 +10,7 @@ namespace ServerApp.Models
         Open,
         InProgress,
         Complete,
-        Expired
+        Expired,
+        Ready
     }
 }

@@ -13,5 +13,9 @@ namespace ServerApp.Data.Interfaces
         public Order DequeueOrder();
 
         public void UpdateOrderStatusToProcessing(Order order);
+
+        void MarkOrderAsReady(string orderId);
+        void PostProcessOrderItemComplete(OrderItem item);
+        List<Order> GetOrders(Status status);
     }
 }
