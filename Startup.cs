@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -34,9 +35,10 @@ namespace ServerApp
             services.AddMvc().AddXmlDataContractSerializerFormatters();
             services.AddSingleton<IWorkerData, WorkerData>();
             services.AddSingleton<IOrderData, OrderData>();
-            
+            services.AddAuthentication();
             services.AddSingleton<IOrderService, OrderService>();
             services.AddHostedService<OrderQueuingProcess>();
+            services.AddSingleton<IAuthenticationService, AppAuthenticationService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,7 +50,7 @@ namespace ServerApp
             }
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseRouting();
 
             app.UseAuthorization();
